@@ -1,29 +1,33 @@
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('FALEN SOCIAL DATA')
-    .addItem('Falen IG Data', 'getFalenIGData')
+    .addItem('Falen IG Data', 'showSidebar')
     .addToUi();
 }
 
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var falenIGSheet = ss.getSheetByName('Latest Posts - Falen IG');
+var twSheet = ss.getSheetByName('Latest Tweets - Falen TW');
+
 function getFalenIGData() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('Latest Posts - Falen IG');
-  var user = sheet.getRange(2, 1).getValue();
+  var instagramService = getInstagramService();
+  var access_token = instagramService.getAccessToken();
   
-  var baseUrl = 'https://www.instagram.com/' + user + '/?__a=1';
-  var response = UrlFetchApp.fetch(baseUrl);
-  Logger.log(response);
+  var params = {
+    headers: {
+      Authorization: 'Bearer ' + access_token
+    },
+    muteHttpExceptions: true
+  }
+
+  var baseUrl = 'https://graph.facebook.com/v4.0/17841400815527210'; //id is associated with cuneo's IG ID
+  var endpoint = '?fields=business_discovery.username(falenkdwb)%7Bfollowers_count%2Cmedia_count%2Cbiography%2Cusername%2Cwebsite%2Cmedia%7Blike_count%2Ccomments_count%2Ccaption%2Cmedia_url%2Ctimestamp%7D%7D&access_token=';
+  
+  var fullURL = baseUrl + endpoint;
+
+  var response = UrlFetchApp.fetch(fullURL, params);
+
   var instaData = JSON.parse(response.getContentText());
-  
-  var followers = instaData.graphql.user.edge_followed_by['count'];
-  var bizCategory = instaData.graphql.user.business_category_name;
-  var urlInBio = instaData.graphql.user.external_url;
-  var numOfPosts = instaData.graphql.user.edge_owner_to_timeline_media['count'];
-  var highlightReel = instaData.graphql.user.edge_follow.highlight_reel_count;
-  
-  var row = [];
-  row.push([followers, bizCategory, urlInBio, numOfPosts, highlightReel]);
-  var range1 = sheet.getRange(4, 1, 1, 5).activate().setValues(row);
   
   getInstaData(instaData);
 }
