@@ -33,24 +33,31 @@ function getFalenIGData() {
 }
 
 function getInstaData(instaData) {
+  var row1 = [];
   var row2 = [];
   var date = new Date();
   
-  for (var i = 0; i < 12; i++) {
-      var mediaId = instaData.graphql.user.edge_owner_to_timeline_media.edges[i].node.id;
-      var mediaCaption = instaData.graphql.user.edge_owner_to_timeline_media.edges[i].node.edge_media_to_caption.edges[0].node['text'];
-      var mediaLikes = instaData.graphql.user.edge_owner_to_timeline_media.edges[i].node.edge_liked_by['count'];
-      var mediaComments = instaData.graphql.user.edge_owner_to_timeline_media.edges[i].node.edge_media_to_comment.count;
-      //var mediaIsVideo = instaData.graphql.user.edge_owener_to_timeline_media.edges[i].thumbnail_resources.is_video;
+  var followers = instaData.business_discovery.followers_count;
+  var total_media = instaData.business_discovery.media_count;
+  var bio = instaData.business_discovery.biography;
+  var username = instaData.business_discovery.username;
+  var bioLink = instaData.business_discovery.website;
       
-      row2.push([date, mediaId, mediaCaption, mediaComments, mediaLikes]);
-    }
-    
-  Logger.log(row2);
+  row1.push([date, username, bio, followers, total_media, bioLink]);
   
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('Latest Posts - Falen IG');
-  var range2 = sheet.getRange(8, 1, row2.length, row2[0].length).activate().setValues(row2);
+  for (var node in instaData.business_discovery.media.data) {
+    var likes = instaData.business_discovery.media.data[node].like_count;
+    var comments = instaData.business_discovery.media.data[node].comments_count;
+    var caption = instaData.business_discovery.media.data[node].caption;
+    var postURL = instaData.business_discovery.media.data[node].media_url;
+    var datePosted = instaData.business_discovery.media.data[node].timestamp;
+    var postId = instaData.business_discovery.media.data[node].id;
+    
+    row2.push([datePosted, postId, caption, postURL, likes, comments]);
+  }
+  
+  var range1 = falenIGSheet.getRange(4, 1, row1.length, row1[0].length).activate().setValues(row1);
+  var range2 = falenIGSheet.getRange(8, 1, row2.length, row2[0].length).activate().setValues(row2);
 }
 
 /*********************************************************************************************************************/
